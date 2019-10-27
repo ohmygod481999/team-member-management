@@ -1,0 +1,7 @@
+{
+    "env": {
+        "DB_URI" : "mongodb://localhost:27017/member-management-system",
+        "DB_NAME" : "member-management-system",
+        "SENDGRID_API_KEY": "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"
+    }
+}

@@ -1,9 +1,9 @@
 const mongoose = require('mongoose')
 
-const dbURI = 'mongodb://localhost:27017/member-management-system'
+const dbURI = process.env.DB_URI
 const dbName = 'member-management-system';
 
-const conn = mongoose.connect(
+const conn = () => mongoose.connect(
     dbURI, {
         useNewUrlParser: true, 
         useUnifiedTopology: true
