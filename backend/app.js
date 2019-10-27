@@ -17,8 +17,8 @@ const app = express()
 const dbConnection = db()
 const PORT = process.env.PORT || 5000;
 
-const privateKey = fs.readFileSync('server.key')
-const certificate = fs.readFileSync('server.cert')
+// const privateKey = fs.readFileSync('server.key')
+// const certificate = fs.readFileSync('server.cert')
 
 
 app.use(bodyParser.urlencoded({
@@ -44,9 +44,9 @@ memberRoute(app)
 departmentRoute(app)
 applicationFormRoute(app)
 
-https.createServer({key: privateKey, cert: certificate}, app)
-    .listen(PORT)
+// https.createServer({key: privateKey, cert: certificate}, app)
+//     .listen(PORT)
 
-// app.listen(PORT, () => {
-//     console.log(`Server is listening on port ${PORT}`)
-// })
+app.listen(PORT, () => {
+    console.log(`Server is listening on port ${PORT}`)
+})
