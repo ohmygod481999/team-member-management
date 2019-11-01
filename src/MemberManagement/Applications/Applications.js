@@ -4,6 +4,7 @@ import {Route} from 'react-router-dom';
 // DASHBOARDS
 
 import ApplicationsList from './ApplicationsList';
+import ApplicationDetail from './ApplicationDetail';
 
 // Layout
 
@@ -22,7 +23,8 @@ const Dashboards = ({match}) => (
             <AppSidebar/>
             <div className="app-main__outer">
                 <div className="app-main__inner">
-                    <Route path={`${match.url}/list`} component={ApplicationsList}/>
+                    <Route exact path={`${match.url}/list`} component={ApplicationsList}/>
+                    <Route exact path={`${match.url}/detail/:id`} component={ApplicationDetail}/>
                 </div>
                 <AppFooter/>
             </div>

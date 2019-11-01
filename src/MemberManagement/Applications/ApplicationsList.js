@@ -3,6 +3,10 @@ import ReactCSSTransitionGroup from 'react-addons-css-transition-group';
 import axios from 'axios'
 
 import PageTitleAlt3 from '../../Layout/AppMain/PageTitleAlt3';
+import SweetAlert from 'sweetalert-react';
+import LaddaButton, {
+    ZOOM_IN,
+} from 'react-ladda';
 
 import Circle from 'react-circle';
 import Chart from 'react-apexcharts'
@@ -59,7 +63,12 @@ export default class MinimalDashboard1 extends Component {
 
         this.state = {
             popoverOpen1: false,
-            persons: []
+            persons: [],
+            responseModal: {
+                show: false,
+                message: ''
+            },
+            isSending: false,
         }
     }
 
@@ -75,7 +84,8 @@ export default class MinimalDashboard1 extends Component {
     }
 
     componentDidMount() {
-        axios.get('https://ydli.herokuapp.com/list')
+        // axios.get('https://ydli.herokuapp.com/list')
+        axios.get('http://localhost:5000/list')
             .then(res => {
                 console.log(res.data)
                 const newPersons = []
@@ -93,18 +103,89 @@ export default class MinimalDashboard1 extends Component {
 
     getClassNameStatus(status){
         switch (status) {
-            case 'CANCELED':
+            case 'rejected':
                 return 'badge badge-pill badge-danger'
             case 'ON HOLD':
                 return 'badge badge-pill badge-info'
             case 'created':
-                return 'badge badge-pill badge-warning'
+                return 'badge badge-pill badge-info'
             case 'accepted':
                 return 'badge badge-pill badge-success'
             default:
-                return 'badge badge-pill badge-info'
+                return 'badge badge-pill badge-warning'
         }
     }
+
+    acceptHandler = id => {
+        this.setState({
+            isSending: true,
+        })
+        axios.post('http://localhost:5000/accept', {
+            id: id
+        }).then(data => {
+            console.log(data)
+            this.setState({
+                persons: this.state.persons.map(person => {
+                    if (person._id == id) person.status = 'accepted'
+                    return person
+                }),
+                responseModal: {
+                    show: true,
+                    message: "Accepted",
+                    responesMessage: data.data.mailStatus,
+                    type: "success"
+                },
+            })
+        })
+        .catch(err => {
+            this.setState({
+                responseModal: {
+                    show: true,
+                    message: "Thất bại",
+                    responesMessage: err + '',
+                    type: "error"
+                },
+            })
+        })
+        .finally(() => {
+            this.setState({
+                isSending: false
+            })
+        })
+    }
+
+    rejectHandler = id => {
+        axios.post('http://localhost:5000/reject', {
+            id: id
+        }).then(data => this.setState({
+            persons: this.state.persons.map(person => {
+                if (person._id == id) person.status = 'rejected'
+                return person
+            }),
+            responseModal: {
+                show: true,
+                message: "Rejected",
+                responesMessage: data.data.mailStatus,
+                type: "success"
+            },
+        }))
+        .catch(err => {
+            this.setState({
+                responseModal: {
+                    show: true,
+                    message: "Thất bại",
+                    responesMessage: err + '',
+                    type: "error"
+                },
+            })
+        })
+        .finally(() => {
+            this.setState({
+                isSending: false
+            })
+        })
+    }
+
 
     render() {
 
@@ -118,7 +199,7 @@ export default class MinimalDashboard1 extends Component {
                     transitionEnter={false}
                     transitionLeave={false}>
                     <PageTitleAlt3
-                        heading="Minimal Dashboards"
+                        heading="Application form"
                         subheading="This is an example dashboard created using build-in elements and components."
                         icon="lnr-apartment opacity-6"
                     />
@@ -127,7 +208,7 @@ export default class MinimalDashboard1 extends Component {
                     <Card className="main-card mb-3">
                         <CardHeader>
                             <div className="card-header-title font-size-lg text-capitalize font-weight-normal">
-                                Company Agents Status
+                                Đơn đăng ký
                             </div>
                             <div className="btn-actions-pane-right">
                                 <Button size="sm" outline className="btn-icon btn-wide btn-outline-2x" id={'PopoverCustomT-1'}
@@ -184,12 +265,14 @@ export default class MinimalDashboard1 extends Component {
                             <thead>
                             <tr>
                                 <th className="text-center">#</th>
-                                <th className="text-center">Avatar</th>
                                 <th className="text-center">Name</th>
                                 <th className="text-center">Email</th>
+                                <th className="text-center">Số điện thoại</th>
+                                <th className="text-center">Facebook Link</th>
+                                <th className="text-center">Group</th>
                                 <th className="text-center">Status</th>
                                 <th className="text-center">Created Date</th>
-                                <th className="text-center">Target Achievement</th>
+                                {/* <th className="text-center">Target Achievement</th> */}
                                 <th className="text-center">Actions</th>
                             </tr>
                             </thead>
@@ -197,13 +280,8 @@ export default class MinimalDashboard1 extends Component {
                                 {this.state.persons.map((person, i) => (
                                     <tr key={i}>
                                         <td className="text-center text-muted" style={{width: '80px'}}>#{i+1}</td>
-                                        <td className="text-center" style={{width: '80px'}}>
-                                            <img width={40} className="rounded-circle"
-                                                src={avatar1}
-                                                alt=""/>
-                                        </td>
                                         <td className="text-center">
-                                            <a href="javascript:void(0)">
+                                            <a href={`#/applications/detail/${person._id}`}>
                                                 {person.name}
                                             </a>
                                         </td>
@@ -211,6 +289,15 @@ export default class MinimalDashboard1 extends Component {
                                             <a href="javascript:void(0)">
                                                 {person.email}
                                             </a>
+                                        </td>
+                                        <td className="text-center">
+                                            {person.phoneNumber}
+                                        </td>
+                                        <td className="text-center">
+                                            {person.fbLink}
+                                        </td>
+                                        <td className="text-center">
+                                            {person.group}
                                         </td>
                                         <td className="text-center">
                                             <div className={this.getClassNameStatus(person.status)}>{person.status}</div>
@@ -221,7 +308,7 @@ export default class MinimalDashboard1 extends Component {
                                                     </span>
                                             {(person.createdDate)}
                                         </td>
-                                        <td className="text-center" style={{width: '200px'}}>
+                                        {/* <td className="text-center" style={{width: '200px'}}>
                                             <div className="widget-content p-0">
                                                 <div className="widget-content-outer">
                                                     <div className="widget-content-wrapper">
@@ -239,11 +326,43 @@ export default class MinimalDashboard1 extends Component {
                                                     </div>
                                                 </div>
                                             </div>
-                                        </td>
+                                        </td> */}
                                         <td className="text-center">
                                             <ButtonGroup size="sm">
-                                                <Button className="btn-shadow" color="primary">Hire</Button>
-                                                <Button className="btn-shadow" color="primary">Fire</Button>
+                                                {/* {person.status == 'created' ? (
+                                                    <div>
+                                                        <LaddaButton className="btn btn-shadow btn-primary"
+                                                                    loading={this.state.isSending}
+                                                                    onClick={() => this.acceptHandler(person._id)}
+                                                                    data-style={ZOOM_IN}
+                                                        >
+                                                            Accept
+                                                        </LaddaButton>
+                                                        <LaddaButton className="btn btn-shadow btn-primary"
+                                                                    loading={this.state.isSending}
+                                                                    onClick={() => this.rejectHandler(person._id)}
+                                                                    data-style={ZOOM_IN}
+                                                        >
+                                                            Reject
+                                                        </LaddaButton>
+                                                    </div>
+                                                ) : null} */}
+                                                {/* <Button className='btn-shadow' color="primary" onClick={() => this.acceptHandler(person._id)}>Accept</Button> */}
+                                                        {/* <Button className='btn-shadow' color="primary" onClick={() => this.rejectHandler(person._id)}>Reject</Button> */}
+                                                        <LaddaButton className="btn btn-shadow btn-primary"
+                                                                    loading={this.state.isSending}
+                                                                    onClick={() => this.acceptHandler(person._id)}
+                                                                    data-style={ZOOM_IN}
+                                                        >
+                                                            Accept
+                                                        </LaddaButton>
+                                                        <LaddaButton className="btn btn-shadow btn-primary"
+                                                                    loading={this.state.isSending}
+                                                                    onClick={() => this.rejectHandler(person._id)}
+                                                                    data-style={ZOOM_IN}
+                                                        >
+                                                            Reject
+                                                        </LaddaButton>
                                             </ButtonGroup>
                                         </td>
                                     </tr>
@@ -262,6 +381,14 @@ export default class MinimalDashboard1 extends Component {
                                     </span>
                             </Button>
                         </CardFooter>
+
+                        <SweetAlert
+                                    title={this.state.responseModal.message}
+                                    confirmButtonColor=""
+                                    show={this.state.responseModal.show}
+                                    text={this.state.responseModal.responesMessage}
+                                    type={this.state.responseModal.type}
+                                    onConfirm={() => this.setState({responseModal: {show: false, message: ''}})}/>
                     </Card>
 
 
